@@ -56,5 +56,19 @@ app.post('/api/pontos', async (req, res) => {
     } catch (error) {
         return res.status(500).json({ erro: error.message });
     }
-    
+    // Rota de login consultando o PostgreSQL do Supabase
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, senha } = req.body;
+        const query = 'SELECT id, nome, email FROM usuarios WHERE email = $1 AND senha = $2';
+        const resultado = await pgClient.query(query, [email, senha]);
+
+        if (resultado.rows.length > 0) {
+            return res.status(200).json({ msg: "Autenticado via PostgreSQL!", usuario: resultado.rows[0] });
+        }
+        return res.status(401).json({ erro: "Usuário ou senha inválidos." });
+    } catch (error) {
+        return res.status(500).json({ erro: error.message });
+    }
+});
 });
