@@ -1,0 +1,28 @@
+{
+  "name": "projeto-final-erik-livia-gabriel-joao",
+  "version": "1.0.0",
+  "description": "[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/NZVyGR9C)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bancos-de-Dados-II/projeto-final-erik-livia-gabriel-joao.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Bancos-de-Dados-II/projeto-final-erik-livia-gabriel-joao/issues"
+  },
+  "homepage": "https://github.com/Bancos-de-Dados-II/projeto-final-erik-livia-gabriel-joao#readme",
+  "dependencies": {
+    "@upstash/redis": "^1.38.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.7.4",
+    "pg": "^8.22.0"
+  }
+}
