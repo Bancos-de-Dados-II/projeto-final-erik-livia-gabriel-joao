@@ -19,6 +19,10 @@ pgClient.connect()
 
 const redis = new Redis({ url: process.env.REDIS_URL, token: process.env.REDIS_TOKEN });
 
+redis.ping()
+    .then(res => console.log("🟠 Redis conectado:", res))
+    .catch(err => console.error("Erro Redis:", err));
+
 
 const PontoSchema = new mongoose.Schema({
     nome: {
