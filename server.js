@@ -76,17 +76,58 @@ app.post('/api/pontos', async (req, res) => {
     }
 });
 
-app.get('/api/pontos', async (req, res) => {
+app.get("/api/pontos", async (req, res) => {
     try {
-        const cachePontos = await redis.get('todos_pontos');
-        if (cachePontos) {
-            return res.status(200).json({ fonte: "Cache (Redis)", dados: JSON.parse(cachePontos) });
+        let dadosEmCache = null;
+
+        try {
+            dadosEmCache = await redis.get("todos_pontos");
+        } catch (erroRedis) {
+            console.warn(
+                "Erro ao consultar o Redis:",
+                erroRedis.message
+            );
         }
-        const pontosBanco = await Ponto.find();
-        await redis.set('todos_pontos', JSON.stringify(pontosBanco), { ex: 60 }); 
-        return res.status(200).json({ fonte: "Banco Principal (MongoDB)", dados: pontosBanco });
-    } catch (error) {
-        return res.status(500).json({ erro: error.message });
+
+        if (dadosEmCache) {
+            const dados = typeof dadosEmCache === "string"
+                ? JSON.parse(dadosEmCache)
+                : dadosEmCache;
+
+            return res.json({
+                fonte: "Redis",
+                dados
+            });
+        }
+
+        const pontos = await Ponto.find();
+
+        try {
+            await redis.set(
+                "todos_pontos",
+                JSON.stringify(pontos)
+            );
+        } catch (erroRedis) {
+            console.warn(
+                "Erro ao salvar no Redis:",
+                erroRedis.message
+            );
+        }
+
+        return res.json({
+            fonte: "MongoDB",
+            dados: pontos
+        });
+    } catch (erro) {
+        console.error(
+            "Erro ao listar pontos:",
+            erro
+        );
+
+        return res.status(500).json({
+            erro: "Não foi possível listar os pontos",
+            detalhes: erro.message
+        });
     }
 });
 

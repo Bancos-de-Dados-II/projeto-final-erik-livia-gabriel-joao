@@ -266,3 +266,31 @@ select {
     flex: 1;
     min-height: 500px;
 }
+
+.informacoes-api {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quantidade-pontos {
+    padding: 7px 10px;
+
+    background: #f1f5f9;
+    border-radius: 999px;
+
+    color: var(--texto-secundario);
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status--carregando {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status--erro {
+    background: #fee2e2;
+    color: #b91c1c;
+}
