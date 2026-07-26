@@ -8,6 +8,9 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
+const dns = require('dns');
+dns.setServers(['8.8.8.8']);
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('🟢 Conectado ao MongoDB Atlas'))
     .catch(err => console.error('Erro MongoDB:', err));
@@ -19,24 +22,16 @@ pgClient.connect()
 
 const redis = new Redis({ url: process.env.REDIS_URL, token: process.env.REDIS_TOKEN });
 
+redis.ping()
+    .then(res => console.log("🟠 Redis conectado:", res))
+    .catch(err => console.error("Erro Redis:", err));
+
 
 const PontoSchema = new mongoose.Schema({
-    nome: {
-        type: String,
-        required: true
-    },
-    material: {
-        type: String,
-        required: true
-    },
-    endereco: {
-        type: String,
-        required: true
-    },
-    horario: {
-        type: String,
-        required: true
-    },
+    nome: { type: String, required: true },
+    material: { type: String, required: true },
+    endereco: { type: String, required: true },
+    horario: { type: String, required: true },
     localizacao: {
         type: { type: String, enum: ['Point'], required: true },
         coordinates: { type: [Number], required: true }
@@ -50,31 +45,22 @@ app.post('/api/pontos', async (req, res) => {
         const { nome, material, endereco, horario, latitude, longitude } = req.body;
 
         if (!nome || !material || !endereco || !horario || latitude == null || longitude == null) {
-            return res.status(400).json({
-                erro: "Todos os campos são obrigatórios."
-            });
+            return res.status(400).json({ erro: "Todos os campos são obrigatórios." });
         }
 
         const lat = parseFloat(latitude);
         const lng = parseFloat(longitude);
 
         if (isNaN(lat) || isNaN(lng)) {
-            return res.status(400).json({
-                erro: "Latitude e longitude devem ser números."
-            });
+            return res.status(400).json({ erro: "Latitude e longitude devem ser números." });
         }
 
         if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-            return res.status(400).json({
-                erro: "Coordenadas inválidas."
-            });
+            return res.status(400).json({ erro: "Coordenadas inválidas." });
         }
 
         const novoPonto = new Ponto({
-            nome,
-            material,
-            endereco,
-            horario,
+            nome, material, endereco, horario,
             localizacao: {
                 type: 'Point',
                 coordinates: [lng, lat]
@@ -144,13 +130,16 @@ const AvaliacaoSchema = new mongoose.Schema({
 });
 const Avaliacao = mongoose.model('Avaliacao', AvaliacaoSchema);
 
-//(OBS:Falta completar a entidade avaliacoes com as rotas GET,PUT E DELETE, só fiz POST)
 app.post('/api/pontos/:id/avaliacoes', async (req, res) => {
     try {
         const pontoId = req.params.id;
         const { nota, comentario } = req.body;
+
+        if (!nota || nota < 1 || nota > 5) {
+            return res.status(400).json({ erro: "A nota é obrigatória e deve ser entre 1 e 5." });
+        }
+
         const pontoExiste = await Ponto.findById(pontoId);
-        
         if (!pontoExiste) {
             return res.status(404).json({ erro: "EcoPonto não encontrado." });
         }
@@ -163,7 +152,45 @@ app.post('/api/pontos/:id/avaliacoes', async (req, res) => {
     }
 });
 
-// Rota de login consultando o PostgreSQL do Supabase
+app.get('/api/pontos/:id/avaliacoes', async (req, res) => {
+    try {
+        const avaliacoes = await Avaliacao.find({ pontoId: req.params.id });
+        return res.status(200).json(avaliacoes);
+    } catch (error) {
+        return res.status(500).json({ erro: error.message });
+    }
+});
+
+app.get('/api/avaliacoes/:id', async (req, res) => {
+    try {
+        const avaliacao = await Avaliacao.findById(req.params.id);
+        if (!avaliacao) return res.status(404).json({ erro: "Avaliação não encontrada." });
+        return res.status(200).json(avaliacao);
+    } catch (error) {
+        return res.status(500).json({ erro: error.message });
+    }
+});
+
+app.put('/api/avaliacoes/:id', async (req, res) => {
+    try {
+        const avaliacaoAtualizada = await Avaliacao.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!avaliacaoAtualizada) return res.status(404).json({ erro: "Avaliação não encontrada." });
+        return res.status(200).json({ msg: "Avaliação atualizada!", avaliacao: avaliacaoAtualizada });
+    } catch (error) {
+        return res.status(500).json({ erro: error.message });
+    }
+});
+
+app.delete('/api/avaliacoes/:id', async (req, res) => {
+    try {
+        const avaliacaoDeletada = await Avaliacao.findByIdAndDelete(req.params.id);
+        if (!avaliacaoDeletada) return res.status(404).json({ erro: "Avaliação não encontrada." });
+        return res.status(200).json({ msg: "Avaliação removida com sucesso!" });
+    } catch (error) {
+        return res.status(500).json({ erro: error.message });
+    }
+});
+
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
@@ -178,7 +205,6 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(500).json({ erro: error.message });
     }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor EcoPontos rodando na porta ${PORT}`));
