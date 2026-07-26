@@ -46,6 +46,8 @@ const mapa = L.map("mapa").setView(
 
 let marcadorSelecao = null;
 
+let pontoEmEdicaoId = null;
+
 const marcadoresPontos = L.layerGroup().addTo(mapa);
 
 L.tileLayer(
@@ -131,11 +133,19 @@ function exibirPontosNoMapa() {
         ]).addTo(marcadoresPontos);
 
         marcador.bindPopup(`
-            <strong>${ponto.nome}</strong><br>
-            <b>Material:</b> ${ponto.material}<br>
-            <b>Endereço:</b> ${ponto.endereco}<br>
-            <b>Horário:</b> ${ponto.horario}
-        `);
+    <strong>${ponto.nome}</strong><br>
+    <b>Material:</b> ${ponto.material}<br>
+    <b>Endereço:</b> ${ponto.endereco}<br>
+    <b>Horário:</b> ${ponto.horario}<br><br>
+
+    <button
+        type="button"
+        class="botao-editar-ponto"
+        data-id="${ponto._id}"
+    >
+        Editar
+    </button>
+`);
 
         limites.push([latitude, longitude]);
     });
@@ -262,8 +272,67 @@ async function carregarPontos() {
     }
 }
 
+
+/**
+ * Preenche o formulário com os dados de um ponto.
+ *
+ * @param {object} ponto Ponto que será editado.
+ */
+function iniciarEdicaoPonto(ponto) {
+    if (
+        !ponto.localizacao ||
+        !Array.isArray(ponto.localizacao.coordinates)
+    ) {
+        alert("Este ponto não possui uma localização válida.");
+        return;
+    }
+
+    const [longitude, latitude] =
+        ponto.localizacao.coordinates;
+
+    pontoEmEdicaoId = ponto._id;
+
+    campoNome.value = ponto.nome || "";
+    campoMaterial.value = ponto.material || "";
+    campoEndereco.value = ponto.endereco || "";
+    campoHorario.value = ponto.horario || "";
+
+    campoLatitude.value = latitude;
+    campoLongitude.value = longitude;
+
+    if (marcadorSelecao) {
+        mapa.removeLayer(marcadorSelecao);
+    }
+
+    marcadorSelecao = L.marker([
+        latitude,
+        longitude
+    ]).addTo(mapa);
+
+    marcadorSelecao.bindPopup(
+        "Localização do ponto em edição"
+    ).openPopup();
+
+    mapa.setView([latitude, longitude], 16);
+
+    botaoCadastrar.textContent =
+        "Salvar alterações";
+
+    atualizarEstadoBotao();
+
+    formulario.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
 /**
  * Cadastra um novo ponto de coleta.
+ *
+ * @param {SubmitEvent} evento Evento de envio do formulário.
+ */
+/**
+ * Cadastra ou atualiza um ponto de coleta.
  *
  * @param {SubmitEvent} evento Evento de envio do formulário.
  */
@@ -276,15 +345,25 @@ async function cadastrarPonto(evento) {
         return;
     }
 
-    const textoOriginalBotao =
-        botaoCadastrar.textContent;
+    const editando = pontoEmEdicaoId !== null;
+
+    const url = editando
+        ? `/api/pontos/${pontoEmEdicaoId}`
+        : "/api/pontos";
+
+    const metodo = editando
+        ? "PUT"
+        : "POST";
 
     botaoCadastrar.disabled = true;
-    botaoCadastrar.textContent = "Cadastrando...";
+
+    botaoCadastrar.textContent = editando
+        ? "Salvando..."
+        : "Cadastrando...";
 
     try {
-        const resposta = await fetch("/api/pontos", {
-            method: "POST",
+        const resposta = await fetch(url, {
+            method: metodo,
 
             headers: {
                 "Content-Type": "application/json"
@@ -305,7 +384,7 @@ async function cadastrarPonto(evento) {
         if (!resposta.ok) {
             throw new Error(
                 resultado.erro ||
-                "Não foi possível cadastrar o ponto."
+                "Não foi possível salvar o ponto."
             );
         }
 
@@ -319,23 +398,60 @@ async function cadastrarPonto(evento) {
             marcadorSelecao = null;
         }
 
+        pontoEmEdicaoId = null;
+
+        botaoCadastrar.textContent =
+            "Cadastrar ponto";
+
         await carregarPontos();
 
-        alert("Ponto cadastrado com sucesso!");
+        alert(
+            editando
+                ? "Ponto atualizado com sucesso!"
+                : "Ponto cadastrado com sucesso!"
+        );
     } catch (erro) {
         console.error(
-            "Erro ao cadastrar ponto:",
+            "Erro ao salvar ponto:",
             erro
         );
 
         alert(erro.message);
     } finally {
         botaoCadastrar.textContent =
-            textoOriginalBotao;
+            pontoEmEdicaoId
+                ? "Salvar alterações"
+                : "Cadastrar ponto";
 
         atualizarEstadoBotao();
     }
 }
+
+/**
+ * Identifica o botão de edição clicado no popup.
+ */
+document.addEventListener("click", (evento) => {
+    const botaoEditar = evento.target.closest(
+        ".botao-editar-ponto"
+    );
+
+    if (!botaoEditar) {
+        return;
+    }
+
+    const pontoId = botaoEditar.dataset.id;
+
+    const pontoSelecionado = pontosDeColeta.find(
+        (ponto) => ponto._id === pontoId
+    );
+
+    if (!pontoSelecionado) {
+        alert("Não foi possível encontrar este ponto.");
+        return;
+    }
+
+    iniciarEdicaoPonto(pontoSelecionado);
+});
 
 /**
  * Envia o formulário para a API.
