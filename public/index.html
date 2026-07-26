@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>EcoPontos</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <header class="cabecalho">
+        <div class="marca">
+            <span class="marca__icone">🌱</span>
+
+            <div>
+                <h1>EcoPontos</h1>
+                <p>Pontos de coleta seletiva</p>
+            </div>
+        </div>
+
+        <button type="button" class="botao-login">
+            Entrar
+        </button>
+    </header>
+
+    <main class="aplicacao">
+        <aside class="painel">
+            <span class="etiqueta">
+                Novo cadastro
+            </span>
+
+            <h2>Cadastrar EcoPonto</h2>
+
+            <p class="descricao">
+                Preencha os dados do ponto de coleta.
+                A localização será selecionada no mapa.
+            </p>
+
+            <form class="formulario">
+                <div class="campo">
+                    <label for="nome">
+                        Nome do ponto
+                    </label>
+
+                    <input type="text" id="nome" name="nome" placeholder="Ex.: EcoPonto Centro">
+                </div>
+
+                <div class="campo">
+                    <label for="material">
+                        Material aceito
+                    </label>
+
+                    <select id="material" name="material">
+                        <option value="">
+                            Selecione um material
+                        </option>
+
+                        <option value="Papel">
+                            Papel
+                        </option>
+
+                        <option value="Plástico">
+                            Plástico
+                        </option>
+
+                        <option value="Vidro">
+                            Vidro
+                        </option>
+
+                        <option value="Metal">
+                            Metal
+                        </option>
+
+                        <option value="Eletrônicos">
+                            Eletrônicos
+                        </option>
+
+                        <option value="Materiais diversos">
+                            Materiais diversos
+                        </option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="endereco">
+                        Endereço
+                    </label>
+
+                    <input type="text" id="endereco" name="endereco" placeholder="Ex.: Rua Principal, Centro">
+                </div>
+
+                <div class="campo">
+                    <label for="horario">
+                        Horário de funcionamento
+                    </label>
+
+                    <input type="text" id="horario" name="horario" placeholder="Ex.: Segunda a sexta, 08h às 17h">
+                </div>
+
+                <div class="coordenadas">
+                    <div class="campo">
+                        <label for="latitude">
+                            Latitude
+                        </label>
+
+                        <input type="text" id="latitude" name="latitude" placeholder="-6.7592" readonly>
+                    </div>
+
+                    <div class="campo">
+                        <label for="longitude">
+                            Longitude
+                        </label>
+
+                        <input type="text" id="longitude" name="longitude" placeholder="-38.2281" readonly>
+                    </div>
+                </div>
+
+                <button type="submit" class="botao-principal" disabled>
+                    Cadastrar ponto
+                </button>
+            </form>
+        </aside>
+
+        <section class="area-mapa">
+            <div class="area-mapa__cabecalho">
+                <div>
+                    <h2>Mapa de EcoPontos</h2>
+
+                    <p>
+                        Visualize e localize pontos de coleta.
+                    </p>
+                </div>
+
+                <span class="status">
+                    Mapa disponível
+                </span>
+            </div>
+
+            <div id="mapa"></div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="./js/mapa.js"></script>
+</body>
+
+</html>
