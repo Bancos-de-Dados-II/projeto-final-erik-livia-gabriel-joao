@@ -2,9 +2,6 @@
 
 /**
  * Pontos recebidos da API.
- *
- * Neste commit, os dados serão apenas carregados e armazenados.
- * Os marcadores serão adicionados no próximo commit.
  */
 let pontosDeColeta = [];
 
@@ -15,8 +12,25 @@ const coordenadasSousa = {
 };
 
 const statusApi = document.querySelector("#status-api");
+
 const quantidadePontos = document.querySelector(
     "#quantidade-pontos"
+);
+
+const formulario = document.querySelector(
+    "#form-cadastro"
+);
+
+const campoNome = document.querySelector("#nome");
+const campoMaterial = document.querySelector("#material");
+const campoEndereco = document.querySelector("#endereco");
+const campoHorario = document.querySelector("#horario");
+
+const campoLatitude = document.querySelector("#latitude");
+const campoLongitude = document.querySelector("#longitude");
+
+const botaoCadastrar = formulario.querySelector(
+    'button[type="submit"]'
 );
 
 /**
@@ -29,6 +43,10 @@ const mapa = L.map("mapa").setView(
     ],
     coordenadasSousa.zoom
 );
+
+let marcadorSelecao = null;
+
+const marcadoresPontos = L.layerGroup().addTo(mapa);
 
 L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -60,7 +78,7 @@ function atualizarInformacoesApi(fonte, quantidade) {
 }
 
 /**
- * Mostra que ocorreu uma falha ao buscar os pontos.
+ * Mostra uma falha ao buscar os pontos.
  */
 function mostrarErroApi() {
     statusApi.classList.remove("status--carregando");
@@ -71,18 +89,14 @@ function mostrarErroApi() {
 }
 
 /**
- * Remove todos os marcadores do mapa.
+ * Remove os marcadores dos pontos cadastrados.
  */
 function limparMarcadores() {
-    mapa.eachLayer((camada) => {
-        if (camada instanceof L.Marker) {
-            mapa.removeLayer(camada);
-        }
-    });
+    marcadoresPontos.clearLayers();
 }
 
 /**
- * Exibe todos os pontos carregados no mapa.
+ * Exibe os pontos carregados no mapa.
  */
 function exibirPontosNoMapa() {
     limparMarcadores();
@@ -104,10 +118,17 @@ function exibirPontosNoMapa() {
         const [longitude, latitude] =
             ponto.localizacao.coordinates;
 
+        if (
+            typeof latitude !== "number" ||
+            typeof longitude !== "number"
+        ) {
+            return;
+        }
+
         const marcador = L.marker([
             latitude,
             longitude
-        ]).addTo(mapa);
+        ]).addTo(marcadoresPontos);
 
         marcador.bindPopup(`
             <strong>${ponto.nome}</strong><br>
@@ -119,7 +140,12 @@ function exibirPontosNoMapa() {
         limites.push([latitude, longitude]);
     });
 
-    if (limites.length > 0) {
+    if (limites.length === 1) {
+        mapa.setView(limites[0], 16);
+        return;
+    }
+
+    if (limites.length > 1) {
         mapa.fitBounds(limites, {
             padding: [40, 40]
         });
@@ -127,10 +153,72 @@ function exibirPontosNoMapa() {
 }
 
 /**
+ * Verifica se todos os campos necessários foram preenchidos.
+ */
+function atualizarEstadoBotao() {
+    const formularioValido =
+        campoNome.value.trim() !== "" &&
+        campoMaterial.value !== "" &&
+        campoEndereco.value.trim() !== "" &&
+        campoHorario.value.trim() !== "" &&
+        campoLatitude.value !== "" &&
+        campoLongitude.value !== "";
+
+    botaoCadastrar.disabled = !formularioValido;
+}
+
+/**
+ * Seleciona a localização do novo ponto no mapa.
+ */
+mapa.on("click", (evento) => {
+    const { lat, lng } = evento.latlng;
+
+    campoLatitude.value = lat.toFixed(6);
+    campoLongitude.value = lng.toFixed(6);
+
+    if (marcadorSelecao) {
+        mapa.removeLayer(marcadorSelecao);
+    }
+
+    marcadorSelecao = L.marker([
+        lat,
+        lng
+    ]).addTo(mapa);
+
+    marcadorSelecao.bindPopup(
+        "Localização selecionada"
+    ).openPopup();
+
+    atualizarEstadoBotao();
+});
+
+/**
+ * Atualiza o estado do botão quando os campos mudarem.
+ */
+[
+    campoNome,
+    campoMaterial,
+    campoEndereco,
+    campoHorario
+].forEach((campo) => {
+    campo.addEventListener(
+        "input",
+        atualizarEstadoBotao
+    );
+
+    campo.addEventListener(
+        "change",
+        atualizarEstadoBotao
+    );
+});
+
+/**
  * Busca os pontos cadastrados no backend.
  */
 async function carregarPontos() {
+    statusApi.classList.remove("status--erro");
     statusApi.classList.add("status--carregando");
+
     statusApi.textContent = "Carregando pontos...";
 
     try {
@@ -144,14 +232,6 @@ async function carregarPontos() {
 
         const resultado = await resposta.json();
 
-        /**
-         * O backend retorna:
-         *
-         * {
-         *   fonte: "MongoDB" ou "Redis",
-         *   dados: [...]
-         * }
-         */
         pontosDeColeta = Array.isArray(resultado.dados)
             ? resultado.dados
             : [];
@@ -167,11 +247,12 @@ async function carregarPontos() {
         );
 
         console.table(pontosDeColeta);
-        
+
         exibirPontosNoMapa();
     } catch (erro) {
         pontosDeColeta = [];
 
+        limparMarcadores();
         mostrarErroApi();
 
         console.error(
@@ -182,9 +263,95 @@ async function carregarPontos() {
 }
 
 /**
- * Carrega os pontos assim que a página estiver pronta.
+ * Cadastra um novo ponto de coleta.
+ *
+ * @param {SubmitEvent} evento Evento de envio do formulário.
+ */
+async function cadastrarPonto(evento) {
+    evento.preventDefault();
+
+    atualizarEstadoBotao();
+
+    if (botaoCadastrar.disabled) {
+        return;
+    }
+
+    const textoOriginalBotao =
+        botaoCadastrar.textContent;
+
+    botaoCadastrar.disabled = true;
+    botaoCadastrar.textContent = "Cadastrando...";
+
+    try {
+        const resposta = await fetch("/api/pontos", {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                nome: campoNome.value.trim(),
+                material: campoMaterial.value,
+                endereco: campoEndereco.value.trim(),
+                horario: campoHorario.value.trim(),
+                latitude: campoLatitude.value,
+                longitude: campoLongitude.value
+            })
+        });
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(
+                resultado.erro ||
+                "Não foi possível cadastrar o ponto."
+            );
+        }
+
+        formulario.reset();
+
+        campoLatitude.value = "";
+        campoLongitude.value = "";
+
+        if (marcadorSelecao) {
+            mapa.removeLayer(marcadorSelecao);
+            marcadorSelecao = null;
+        }
+
+        await carregarPontos();
+
+        alert("Ponto cadastrado com sucesso!");
+    } catch (erro) {
+        console.error(
+            "Erro ao cadastrar ponto:",
+            erro
+        );
+
+        alert(erro.message);
+    } finally {
+        botaoCadastrar.textContent =
+            textoOriginalBotao;
+
+        atualizarEstadoBotao();
+    }
+}
+
+/**
+ * Envia o formulário para a API.
+ */
+formulario.addEventListener(
+    "submit",
+    cadastrarPonto
+);
+
+/**
+ * Carrega os pontos quando a página estiver pronta.
  */
 document.addEventListener(
     "DOMContentLoaded",
-    carregarPontos
+    () => {
+        atualizarEstadoBotao();
+        carregarPontos();
+    }
 );
