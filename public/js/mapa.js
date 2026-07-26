@@ -71,6 +71,62 @@ function mostrarErroApi() {
 }
 
 /**
+ * Remove todos os marcadores do mapa.
+ */
+function limparMarcadores() {
+    mapa.eachLayer((camada) => {
+        if (camada instanceof L.Marker) {
+            mapa.removeLayer(camada);
+        }
+    });
+}
+
+/**
+ * Exibe todos os pontos carregados no mapa.
+ */
+function exibirPontosNoMapa() {
+    limparMarcadores();
+
+    if (pontosDeColeta.length === 0) {
+        return;
+    }
+
+    const limites = [];
+
+    pontosDeColeta.forEach((ponto) => {
+        if (
+            !ponto.localizacao ||
+            !Array.isArray(ponto.localizacao.coordinates)
+        ) {
+            return;
+        }
+
+        const [longitude, latitude] =
+            ponto.localizacao.coordinates;
+
+        const marcador = L.marker([
+            latitude,
+            longitude
+        ]).addTo(mapa);
+
+        marcador.bindPopup(`
+            <strong>${ponto.nome}</strong><br>
+            <b>Material:</b> ${ponto.material}<br>
+            <b>Endereço:</b> ${ponto.endereco}<br>
+            <b>Horário:</b> ${ponto.horario}
+        `);
+
+        limites.push([latitude, longitude]);
+    });
+
+    if (limites.length > 0) {
+        mapa.fitBounds(limites, {
+            padding: [40, 40]
+        });
+    }
+}
+
+/**
  * Busca os pontos cadastrados no backend.
  */
 async function carregarPontos() {
@@ -111,6 +167,8 @@ async function carregarPontos() {
         );
 
         console.table(pontosDeColeta);
+        
+        exibirPontosNoMapa();
     } catch (erro) {
         pontosDeColeta = [];
 
