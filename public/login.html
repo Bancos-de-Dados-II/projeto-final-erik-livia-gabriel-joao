@@ -1,19 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Login | EcoPontos</title>
 
-    <link
-        rel="stylesheet"
-        href="./css/login.css"
-    >
+    <link rel="stylesheet" href="./css/login.css">
 </head>
 
 <body>
@@ -33,45 +28,35 @@
                 <div class="campo">
                     <label for="email">E-mail</label>
 
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="Digite seu e-mail"
-                        autocomplete="email"
-                        required
-                    >
+                    <input type="email" id="email" name="email" placeholder="Digite seu e-mail" autocomplete="email"
+                        required>
                 </div>
 
                 <div class="campo">
                     <label for="senha">Senha</label>
 
-                    <input
-                        type="password"
-                        id="senha"
-                        name="senha"
-                        placeholder="Digite sua senha"
-                        autocomplete="current-password"
-                        required
-                    >
+                    <input type="password" id="senha" name="senha" placeholder="Digite sua senha"
+                        autocomplete="current-password" required>
                 </div>
 
-                <p
-                    id="mensagem-login"
-                    class="mensagem-login"
-                    aria-live="polite"
-                ></p>
+                <p id="mensagem-login" class="mensagem-login" aria-live="polite"></p>
 
-                <button
-                    type="submit"
-                    id="botao-entrar"
-                >
+                <button type="submit" id="botao-entrar">
                     Entrar
                 </button>
+
+                <p class="link-autenticacao">
+                    Ainda não possui uma conta?
+
+                    <a href="./cadastro.html">
+                        Criar conta
+                    </a>
+                </p>
             </form>
         </section>
     </main>
 
     <script src="./js/login.js"></script>
 </body>
+
 </html>

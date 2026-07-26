@@ -166,3 +166,19 @@ input {
         padding: 28px 22px;
     }
 }
+
+.link-autenticacao {
+    color: #6b7280;
+    font-size: 14px;
+    text-align: center;
+}
+
+.link-autenticacao a {
+    color: #15803d;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.link-autenticacao a:hover {
+    text-decoration: underline;
+}

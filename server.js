@@ -232,18 +232,91 @@ app.delete('/api/avaliacoes/:id', async (req, res) => {
     }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post("/api/auth/cadastro", async (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+
+        if (!nome || !email || !senha) {
+            return res.status(400).json({
+                erro: "Nome, e-mail e senha são obrigatórios."
+            });
+        }
+
+        const usuarioExistente = await pgClient.query(
+            "SELECT id FROM usuarios WHERE email = $1",
+            [email]
+        );
+
+        if (usuarioExistente.rows.length > 0) {
+            return res.status(409).json({
+                erro: "Já existe um usuário com este e-mail."
+            });
+        }
+
+        const query = `
+            INSERT INTO usuarios (nome, email, senha)
+            VALUES ($1, $2, $3)
+            RETURNING id, nome, email
+        `;
+
+        const resultado = await pgClient.query(
+            query,
+            [
+                nome.trim(),
+                email.trim().toLowerCase(),
+                senha
+            ]
+        );
+
+        return res.status(201).json({
+            msg: "Usuário cadastrado com sucesso!",
+            usuario: resultado.rows[0]
+        });
+    } catch (error) {
+        return res.status(500).json({
+            erro: error.message
+        });
+    }
+});
+
+app.post("/api/auth/login", async (req, res) => {
     try {
         const { email, senha } = req.body;
-        const query = 'SELECT id, nome, email FROM usuarios WHERE email = $1 AND senha = $2';
-        const resultado = await pgClient.query(query, [email, senha]);
+
+        if (!email || !senha) {
+            return res.status(400).json({
+                erro: "E-mail e senha são obrigatórios."
+            });
+        }
+
+        const query = `
+            SELECT id, nome, email
+            FROM usuarios
+            WHERE email = $1 AND senha = $2
+        `;
+
+        const resultado = await pgClient.query(
+            query,
+            [
+                email.trim().toLowerCase(),
+                senha
+            ]
+        );
 
         if (resultado.rows.length > 0) {
-            return res.status(200).json({ msg: "Autenticado via PostgreSQL!", usuario: resultado.rows[0] });
+            return res.status(200).json({
+                msg: "Autenticado via PostgreSQL!",
+                usuario: resultado.rows[0]
+            });
         }
-        return res.status(401).json({ erro: "Usuário ou senha inválidos." });
+
+        return res.status(401).json({
+            erro: "Usuário ou senha inválidos."
+        });
     } catch (error) {
-        return res.status(500).json({ erro: error.message });
+        return res.status(500).json({
+            erro: error.message
+        });
     }
 });
 
