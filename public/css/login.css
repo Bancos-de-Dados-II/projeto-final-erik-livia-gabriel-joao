@@ -1,0 +1,168 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        linear-gradient(
+            135deg,
+            #e8f5e9,
+            #c8e6c9
+        );
+
+    color: #1f2937;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.pagina-login {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+}
+
+.cartao-login {
+    width: 100%;
+    max-width: 420px;
+
+    padding: 36px;
+
+    background-color: #ffffff;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 16px 40px
+        rgba(0, 0, 0, 0.12);
+}
+
+.cabecalho-login {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.icone-logo {
+    margin-bottom: 8px;
+    font-size: 44px;
+}
+
+.cabecalho-login h1 {
+    color: #166534;
+    font-size: 30px;
+}
+
+.cabecalho-login p {
+    margin-top: 8px;
+    color: #6b7280;
+}
+
+.formulario-login {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.campo label {
+    font-weight: 600;
+}
+
+.campo input {
+    width: 100%;
+    padding: 12px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.campo input:focus {
+    border-color: #16a34a;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(22, 163, 74, 0.15);
+}
+
+#botao-entrar {
+    width: 100%;
+    padding: 13px;
+
+    border: none;
+    border-radius: 8px;
+
+    background-color: #16a34a;
+    color: #ffffff;
+
+    font-weight: 700;
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s,
+        opacity 0.2s;
+}
+
+#botao-entrar:hover {
+    background-color: #15803d;
+}
+
+#botao-entrar:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.mensagem-login {
+    display: none;
+
+    padding: 10px;
+
+    border-radius: 6px;
+
+    font-size: 14px;
+    text-align: center;
+}
+
+.mensagem-login--erro {
+    display: block;
+
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.mensagem-login--sucesso {
+    display: block;
+
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+@media (max-width: 480px) {
+    .cartao-login {
+        padding: 28px 22px;
+    }
+}
