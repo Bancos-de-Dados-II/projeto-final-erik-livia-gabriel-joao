@@ -226,18 +226,35 @@ function atualizarEstadoBotao() {
  * Seleciona a localização do novo ponto no mapa.
  */
 mapa.on("click", (evento) => {
+  // Se já existe um ponto selecionado, não altera a localização.
+  if (marcadorSelecao) {
+    return;
+  }
+
   const { lat, lng } = evento.latlng;
 
   campoLatitude.value = lat.toFixed(6);
   campoLongitude.value = lng.toFixed(6);
 
-  if (marcadorSelecao) {
-    mapa.removeLayer(marcadorSelecao);
-  }
-
   marcadorSelecao = L.marker([lat, lng]).addTo(mapa);
 
-  marcadorSelecao.bindPopup("Localização selecionada").openPopup();
+  marcadorSelecao
+    .bindPopup("Localização selecionada. Clique no marcador para remover.")
+    .openPopup();
+
+  marcadorSelecao.on("click", (eventoMarcador) => {
+    // Impede que o clique no marcador também seja interpretado
+    // como um clique no mapa.
+    L.DomEvent.stopPropagation(eventoMarcador.originalEvent);
+
+    mapa.removeLayer(marcadorSelecao);
+    marcadorSelecao = null;
+
+    campoLatitude.value = "";
+    campoLongitude.value = "";
+
+    atualizarEstadoBotao();
+  });
 
   atualizarEstadoBotao();
 });
