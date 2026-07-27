@@ -80,6 +80,8 @@ const mensagemAvaliacoes = document.querySelector("#mensagem-avaliacoes");
 
 let pontoSelecionadoParaAvaliacao = null;
 
+let avaliacaoEmEdicaoId = null;
+
 /**
  * Cria o mapa e centraliza na cidade de Sousa.
  */
@@ -425,24 +427,50 @@ function criarEstrelas(nota) {
   return "⭐".repeat(quantidade);
 }
 
-function abrirModalAvaliacoes(pontoId, nomePonto) {
+function abrirModalAvaliacoes(
+  pontoId,
+  nomePonto,
+) {
   pontoSelecionadoParaAvaliacao = pontoId;
+  avaliacaoEmEdicaoId = null;
 
-  tituloModalAvaliacoes.textContent = `Avaliações de ${nomePonto}`;
+  tituloModalAvaliacoes.textContent =
+    `Avaliações de ${nomePonto}`;
 
   formularioAvaliacao.reset();
 
-  modalAvaliacoes.classList.remove("modal-avaliacoes--oculto");
+  const botaoEnviar =
+    formularioAvaliacao.querySelector(
+      'button[type="submit"]',
+    );
+
+  botaoEnviar.textContent =
+    "Enviar avaliação";
+
+  modalAvaliacoes.classList.remove(
+    "modal-avaliacoes--oculto",
+  );
 
   carregarAvaliacoes(pontoId);
 }
 
 function fecharModalDeAvaliacoes() {
-  modalAvaliacoes.classList.add("modal-avaliacoes--oculto");
+  modalAvaliacoes.classList.add(
+    "modal-avaliacoes--oculto",
+  );
 
   pontoSelecionadoParaAvaliacao = null;
+  avaliacaoEmEdicaoId = null;
 
   formularioAvaliacao.reset();
+
+  const botaoEnviar =
+    formularioAvaliacao.querySelector(
+      'button[type="submit"]',
+    );
+
+  botaoEnviar.textContent =
+    "Enviar avaliação";
 }
 
 function exibirAvaliacoes(avaliacoes) {
@@ -463,22 +491,76 @@ function exibirAvaliacoes(avaliacoes) {
 
     item.classList.add("avaliacao-item");
 
+    const comentario =
+      avaliacao.comentario || "Avaliação sem comentário.";
+
     item.innerHTML = `
       <div class="avaliacao-item__nota">
         ${criarEstrelas(avaliacao.nota)}
       </div>
 
-      <p class="avaliacao-item__comentario">
-        ${
-          avaliacao.comentario
-            ? avaliacao.comentario
-            : "Avaliação sem comentário."
-        }
-      </p>
+      <p class="avaliacao-item__comentario"></p>
+
+      <div class="avaliacao-item__acoes">
+        <button
+          type="button"
+          class="botao-editar-avaliacao"
+          data-id="${avaliacao._id}"
+          data-nota="${avaliacao.nota}"
+        >
+          Editar
+        </button>
+
+        <button
+          type="button"
+          class="botao-excluir-avaliacao"
+          data-id="${avaliacao._id}"
+        >
+          Excluir
+        </button>
+      </div>
     `;
+
+    const elementoComentario = item.querySelector(
+      ".avaliacao-item__comentario",
+    );
+
+    elementoComentario.textContent = comentario;
+
+    const botaoEditar = item.querySelector(
+      ".botao-editar-avaliacao",
+    );
+
+    botaoEditar.dataset.comentario =
+      avaliacao.comentario || "";
 
     avaliacoesContainer.appendChild(item);
   });
+}
+
+function iniciarEdicaoAvaliacao(
+  avaliacaoId,
+  nota,
+  comentario,
+) {
+  avaliacaoEmEdicaoId = avaliacaoId;
+
+  campoNotaAvaliacao.value = nota;
+  campoComentarioAvaliacao.value = comentario;
+
+  const botaoEnviar =
+    formularioAvaliacao.querySelector(
+      'button[type="submit"]',
+    );
+
+  botaoEnviar.textContent = "Salvar alterações";
+
+  formularioAvaliacao.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+
+  campoComentarioAvaliacao.focus();
 }
 
 async function carregarAvaliacoes(pontoId) {
@@ -519,55 +601,138 @@ async function cadastrarAvaliacao(evento) {
 
   const nota = Number(campoNotaAvaliacao.value);
 
-  const comentario = campoComentarioAvaliacao.value.trim();
+  const comentario =
+    campoComentarioAvaliacao.value.trim();
 
   if (!nota || nota < 1 || nota > 5) {
     alert("Selecione uma nota entre 1 e 5.");
     return;
   }
 
-  const botaoEnviar = formularioAvaliacao.querySelector(
-    'button[type="submit"]',
-  );
+  const editando =
+    avaliacaoEmEdicaoId !== null;
+
+  const url = editando
+    ? `/api/avaliacoes/${avaliacaoEmEdicaoId}`
+    : `/api/pontos/${pontoSelecionadoParaAvaliacao}/avaliacoes`;
+
+  const metodo = editando ? "PUT" : "POST";
+
+  const botaoEnviar =
+    formularioAvaliacao.querySelector(
+      'button[type="submit"]',
+    );
 
   botaoEnviar.disabled = true;
-  botaoEnviar.textContent = "Enviando...";
+
+  botaoEnviar.textContent = editando
+    ? "Salvando..."
+    : "Enviando...";
+
+  try {
+    const resposta = await fetch(url, {
+      method: metodo,
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        nota,
+        comentario,
+      }),
+    });
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        resultado.erro ||
+          "Não foi possível salvar a avaliação.",
+      );
+    }
+
+    formularioAvaliacao.reset();
+
+    avaliacaoEmEdicaoId = null;
+
+    await carregarAvaliacoes(
+      pontoSelecionadoParaAvaliacao,
+    );
+
+    alert(
+      editando
+        ? "Avaliação atualizada com sucesso!"
+        : "Avaliação cadastrada com sucesso!",
+    );
+  } catch (erro) {
+    console.error(
+      "Erro ao salvar avaliação:",
+      erro,
+    );
+
+    alert(erro.message);
+  } finally {
+    botaoEnviar.disabled = false;
+
+    botaoEnviar.textContent =
+      avaliacaoEmEdicaoId
+        ? "Salvar alterações"
+        : "Enviar avaliação";
+  }
+}
+async function excluirAvaliacao(avaliacaoId) {
+  const confirmar = confirm(
+    "Deseja realmente excluir esta avaliação?",
+  );
+
+  if (!confirmar) {
+    return;
+  }
 
   try {
     const resposta = await fetch(
-      `/api/pontos/${pontoSelecionadoParaAvaliacao}/avaliacoes`,
+      `/api/avaliacoes/${avaliacaoId}`,
       {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          nota,
-          comentario,
-        }),
+        method: "DELETE",
       },
     );
 
     const resultado = await resposta.json();
 
     if (!resposta.ok) {
-      throw new Error(resultado.erro || "Não foi possível salvar a avaliação.");
+      throw new Error(
+        resultado.erro ||
+          "Não foi possível excluir a avaliação.",
+      );
     }
 
-    formularioAvaliacao.reset();
+    if (avaliacaoEmEdicaoId === avaliacaoId) {
+      avaliacaoEmEdicaoId = null;
 
-    await carregarAvaliacoes(pontoSelecionadoParaAvaliacao);
+      formularioAvaliacao.reset();
 
-    alert("Avaliação cadastrada com sucesso!");
+      const botaoEnviar =
+        formularioAvaliacao.querySelector(
+          'button[type="submit"]',
+        );
+
+      botaoEnviar.textContent =
+        "Enviar avaliação";
+    }
+
+    await carregarAvaliacoes(
+      pontoSelecionadoParaAvaliacao,
+    );
+
+    alert("Avaliação excluída com sucesso!");
   } catch (erro) {
-    console.error("Erro ao cadastrar avaliação:", erro);
+    console.error(
+      "Erro ao excluir avaliação:",
+      erro,
+    );
 
     alert(erro.message);
-  } finally {
-    botaoEnviar.disabled = false;
-    botaoEnviar.textContent = "Enviar avaliação";
   }
 }
 
@@ -575,6 +740,34 @@ async function cadastrarAvaliacao(evento) {
  * Identifica o botão de edição clicado no popup.
  */
 document.addEventListener("click", (evento) => {
+
+      const botaoEditarAvaliacao =
+    evento.target.closest(
+      ".botao-editar-avaliacao",
+    );
+
+  if (botaoEditarAvaliacao) {
+    iniciarEdicaoAvaliacao(
+      botaoEditarAvaliacao.dataset.id,
+      botaoEditarAvaliacao.dataset.nota,
+      botaoEditarAvaliacao.dataset.comentario,
+    );
+
+    return;
+  }
+
+  const botaoExcluirAvaliacao =
+    evento.target.closest(
+      ".botao-excluir-avaliacao",
+    );
+
+  if (botaoExcluirAvaliacao) {
+    excluirAvaliacao(
+      botaoExcluirAvaliacao.dataset.id,
+    );
+
+    return;
+  }
   const botaoAvaliacoes = evento.target.closest(".botao-avaliacoes-ponto");
 
   if (botaoAvaliacoes) {

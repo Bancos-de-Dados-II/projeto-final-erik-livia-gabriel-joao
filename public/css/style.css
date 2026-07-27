@@ -522,3 +522,40 @@ select {
         padding: 18px;
     }
 }
+
+.avaliacao-item__acoes {
+    display: flex;
+    gap: 8px;
+
+    margin-top: 14px;
+}
+
+.botao-editar-avaliacao,
+.botao-excluir-avaliacao {
+    padding: 7px 12px;
+
+    border: none;
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.botao-editar-avaliacao {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.botao-editar-avaliacao:hover {
+    background: #bfdbfe;
+}
+
+.botao-excluir-avaliacao {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.botao-excluir-avaliacao:hover {
+    background: #fecaca;
+}
