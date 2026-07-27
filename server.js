@@ -195,40 +195,83 @@ app.post('/api/pontos/:id/avaliacoes', async (req, res) => {
 
 app.get('/api/pontos/:id/avaliacoes', async (req, res) => {
     try {
-        const avaliacoes = await Avaliacao.find({ pontoId: req.params.id });
+        const avaliacoes = await Avaliacao.find({
+            pontoId: req.params.id
+        });
+
         return res.status(200).json(avaliacoes);
     } catch (error) {
-        return res.status(500).json({ erro: error.message });
+        return res.status(500).json({
+            erro: error.message
+        });
     }
 });
 
 app.get('/api/avaliacoes/:id', async (req, res) => {
     try {
         const avaliacao = await Avaliacao.findById(req.params.id);
-        if (!avaliacao) return res.status(404).json({ erro: "Avaliação não encontrada." });
+
+        if (!avaliacao) {
+            return res.status(404).json({
+                erro: "Avaliação não encontrada."
+            });
+        }
+
         return res.status(200).json(avaliacao);
     } catch (error) {
-        return res.status(500).json({ erro: error.message });
+        return res.status(500).json({
+            erro: error.message
+        });
     }
 });
 
 app.put('/api/avaliacoes/:id', async (req, res) => {
     try {
-        const avaliacaoAtualizada = await Avaliacao.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!avaliacaoAtualizada) return res.status(404).json({ erro: "Avaliação não encontrada." });
-        return res.status(200).json({ msg: "Avaliação atualizada!", avaliacao: avaliacaoAtualizada });
+        const avaliacaoAtualizada =
+            await Avaliacao.findByIdAndUpdate(
+                req.params.id,
+                req.body,
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+
+        if (!avaliacaoAtualizada) {
+            return res.status(404).json({
+                erro: "Avaliação não encontrada."
+            });
+        }
+
+        return res.status(200).json({
+            msg: "Avaliação atualizada!",
+            avaliacao: avaliacaoAtualizada
+        });
     } catch (error) {
-        return res.status(500).json({ erro: error.message });
+        return res.status(500).json({
+            erro: error.message
+        });
     }
 });
 
 app.delete('/api/avaliacoes/:id', async (req, res) => {
     try {
-        const avaliacaoDeletada = await Avaliacao.findByIdAndDelete(req.params.id);
-        if (!avaliacaoDeletada) return res.status(404).json({ erro: "Avaliação não encontrada." });
-        return res.status(200).json({ msg: "Avaliação removida com sucesso!" });
+        const avaliacaoDeletada =
+            await Avaliacao.findByIdAndDelete(req.params.id);
+
+        if (!avaliacaoDeletada) {
+            return res.status(404).json({
+                erro: "Avaliação não encontrada."
+            });
+        }
+
+        return res.status(200).json({
+            msg: "Avaliação removida com sucesso!"
+        });
     } catch (error) {
-        return res.status(500).json({ erro: error.message });
+        return res.status(500).json({
+            erro: error.message
+        });
     }
 });
 
@@ -244,7 +287,7 @@ app.post("/api/auth/cadastro", async (req, res) => {
 
         const usuarioExistente = await pgClient.query(
             "SELECT id FROM usuarios WHERE email = $1",
-            [email]
+            [email.trim().toLowerCase()]
         );
 
         if (usuarioExistente.rows.length > 0) {
