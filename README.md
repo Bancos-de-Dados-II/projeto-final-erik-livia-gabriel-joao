@@ -32,4 +32,6 @@ Sistema web para cadastro de pontos de coleta seletiva utilizando persistência 
 
 npm install
 
-npm start
+node start
+
+http://localhost:3000
