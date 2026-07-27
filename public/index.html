@@ -156,6 +156,67 @@
         </section>
     </main>
 
+    <div class="modal-avaliacoes modal-avaliacoes--oculto" id="modal-avaliacoes">
+        <div class="modal-avaliacoes__conteudo">
+            <div class="modal-avaliacoes__cabecalho">
+                <div>
+                    <span class="etiqueta">Avaliações</span>
+
+                    <h2 id="titulo-modal-avaliacoes">
+                        Avaliações do EcoPonto
+                    </h2>
+                </div>
+
+                <button type="button" class="modal-avaliacoes__fechar" id="fechar-modal-avaliacoes" aria-label="Fechar">
+                    ×
+                </button>
+            </div>
+
+            <form class="formulario-avaliacao" id="form-avaliacao">
+                <div class="campo">
+                    <label for="nota-avaliacao">
+                        Nota
+                    </label>
+
+                    <select id="nota-avaliacao" required>
+                        <option value="">
+                            Selecione uma nota
+                        </option>
+
+                        <option value="1">⭐ 1</option>
+                        <option value="2">⭐⭐ 2</option>
+                        <option value="3">⭐⭐⭐ 3</option>
+                        <option value="4">⭐⭐⭐⭐ 4</option>
+                        <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="comentario-avaliacao">
+                        Comentário
+                    </label>
+
+                    <textarea id="comentario-avaliacao" rows="4"
+                        placeholder="Conte como foi sua experiência..."></textarea>
+                </div>
+
+                <button type="submit" class="botao-principal">
+                    Enviar avaliação
+                </button>
+            </form>
+
+            <div class="lista-avaliacoes">
+                <h3>Avaliações cadastradas</h3>
+
+                <p class="mensagem-avaliacoes" id="mensagem-avaliacoes">
+                    Carregando avaliações...
+                </p>
+
+                <div id="avaliacoes-container"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script src="./js/mapa.js"></script>

@@ -56,6 +56,30 @@ const campoLongitude = document.querySelector("#longitude");
 
 const botaoCadastrar = formulario.querySelector('button[type="submit"]');
 
+const modalAvaliacoes = document.querySelector("#modal-avaliacoes");
+
+const fecharModalAvaliacoes = document.querySelector(
+  "#fechar-modal-avaliacoes",
+);
+
+const tituloModalAvaliacoes = document.querySelector(
+  "#titulo-modal-avaliacoes",
+);
+
+const formularioAvaliacao = document.querySelector("#form-avaliacao");
+
+const campoNotaAvaliacao = document.querySelector("#nota-avaliacao");
+
+const campoComentarioAvaliacao = document.querySelector(
+  "#comentario-avaliacao",
+);
+
+const avaliacoesContainer = document.querySelector("#avaliacoes-container");
+
+const mensagemAvaliacoes = document.querySelector("#mensagem-avaliacoes");
+
+let pontoSelecionadoParaAvaliacao = null;
+
 /**
  * Cria o mapa e centraliza na cidade de Sousa.
  */
@@ -155,6 +179,15 @@ function exibirPontosNoMapa() {
     >
         Excluir
     </button>
+
+    <button
+    type="button"
+    class="botao-avaliacoes-ponto"
+    data-id="${ponto._id}"
+    data-nome="${ponto.nome}"
+>
+    Avaliações
+</button>
 `);
 
     limites.push([latitude, longitude]);
@@ -386,44 +419,196 @@ async function cadastrarPonto(evento) {
   }
 }
 
+function criarEstrelas(nota) {
+  const quantidade = Number(nota);
+
+  return "⭐".repeat(quantidade);
+}
+
+function abrirModalAvaliacoes(pontoId, nomePonto) {
+  pontoSelecionadoParaAvaliacao = pontoId;
+
+  tituloModalAvaliacoes.textContent = `Avaliações de ${nomePonto}`;
+
+  formularioAvaliacao.reset();
+
+  modalAvaliacoes.classList.remove("modal-avaliacoes--oculto");
+
+  carregarAvaliacoes(pontoId);
+}
+
+function fecharModalDeAvaliacoes() {
+  modalAvaliacoes.classList.add("modal-avaliacoes--oculto");
+
+  pontoSelecionadoParaAvaliacao = null;
+
+  formularioAvaliacao.reset();
+}
+
+function exibirAvaliacoes(avaliacoes) {
+  avaliacoesContainer.innerHTML = "";
+
+  if (avaliacoes.length === 0) {
+    mensagemAvaliacoes.style.display = "block";
+    mensagemAvaliacoes.textContent =
+      "Este EcoPonto ainda não possui avaliações.";
+
+    return;
+  }
+
+  mensagemAvaliacoes.style.display = "none";
+
+  avaliacoes.forEach((avaliacao) => {
+    const item = document.createElement("article");
+
+    item.classList.add("avaliacao-item");
+
+    item.innerHTML = `
+      <div class="avaliacao-item__nota">
+        ${criarEstrelas(avaliacao.nota)}
+      </div>
+
+      <p class="avaliacao-item__comentario">
+        ${
+          avaliacao.comentario
+            ? avaliacao.comentario
+            : "Avaliação sem comentário."
+        }
+      </p>
+    `;
+
+    avaliacoesContainer.appendChild(item);
+  });
+}
+
+async function carregarAvaliacoes(pontoId) {
+  mensagemAvaliacoes.style.display = "block";
+  mensagemAvaliacoes.textContent = "Carregando avaliações...";
+
+  avaliacoesContainer.innerHTML = "";
+
+  try {
+    const resposta = await fetch(`/api/pontos/${pontoId}/avaliacoes`);
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        resultado.erro || "Não foi possível carregar as avaliações.",
+      );
+    }
+
+    const avaliacoes = Array.isArray(resultado) ? resultado : [];
+
+    exibirAvaliacoes(avaliacoes);
+  } catch (erro) {
+    console.error("Erro ao carregar avaliações:", erro);
+
+    mensagemAvaliacoes.style.display = "block";
+    mensagemAvaliacoes.textContent = erro.message;
+  }
+}
+
+async function cadastrarAvaliacao(evento) {
+  evento.preventDefault();
+
+  if (!pontoSelecionadoParaAvaliacao) {
+    alert("Nenhum EcoPonto foi selecionado.");
+    return;
+  }
+
+  const nota = Number(campoNotaAvaliacao.value);
+
+  const comentario = campoComentarioAvaliacao.value.trim();
+
+  if (!nota || nota < 1 || nota > 5) {
+    alert("Selecione uma nota entre 1 e 5.");
+    return;
+  }
+
+  const botaoEnviar = formularioAvaliacao.querySelector(
+    'button[type="submit"]',
+  );
+
+  botaoEnviar.disabled = true;
+  botaoEnviar.textContent = "Enviando...";
+
+  try {
+    const resposta = await fetch(
+      `/api/pontos/${pontoSelecionadoParaAvaliacao}/avaliacoes`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          nota,
+          comentario,
+        }),
+      },
+    );
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(resultado.erro || "Não foi possível salvar a avaliação.");
+    }
+
+    formularioAvaliacao.reset();
+
+    await carregarAvaliacoes(pontoSelecionadoParaAvaliacao);
+
+    alert("Avaliação cadastrada com sucesso!");
+  } catch (erro) {
+    console.error("Erro ao cadastrar avaliação:", erro);
+
+    alert(erro.message);
+  } finally {
+    botaoEnviar.disabled = false;
+    botaoEnviar.textContent = "Enviar avaliação";
+  }
+}
+
 /**
  * Identifica o botão de edição clicado no popup.
  */
 document.addEventListener("click", (evento) => {
+  const botaoAvaliacoes = evento.target.closest(".botao-avaliacoes-ponto");
 
-    const botaoEditar =
-        evento.target.closest(".botao-editar-ponto");
+  if (botaoAvaliacoes) {
+    abrirModalAvaliacoes(
+      botaoAvaliacoes.dataset.id,
+      botaoAvaliacoes.dataset.nome,
+    );
 
-    if (botaoEditar) {
+    return;
+  }
+  const botaoEditar = evento.target.closest(".botao-editar-ponto");
 
-        const pontoId = botaoEditar.dataset.id;
+  if (botaoEditar) {
+    const pontoId = botaoEditar.dataset.id;
 
-        const pontoSelecionado =
-            pontosDeColeta.find(
-                ponto => ponto._id === pontoId
-            );
+    const pontoSelecionado = pontosDeColeta.find(
+      (ponto) => ponto._id === pontoId,
+    );
 
-        if (!pontoSelecionado) {
-            alert("Ponto não encontrado.");
-            return;
-        }
-
-        iniciarEdicaoPonto(
-            pontoSelecionado
-        );
-
-        return;
+    if (!pontoSelecionado) {
+      alert("Ponto não encontrado.");
+      return;
     }
 
-    const botaoExcluir =
-        evento.target.closest(".botao-excluir-ponto");
+    iniciarEdicaoPonto(pontoSelecionado);
 
-    if (botaoExcluir) {
-        excluirPonto(
-            botaoExcluir.dataset.id
-        );
-    }
+    return;
+  }
 
+  const botaoExcluir = evento.target.closest(".botao-excluir-ponto");
+
+  if (botaoExcluir) {
+    excluirPonto(botaoExcluir.dataset.id);
+  }
 });
 
 /**
@@ -432,63 +617,84 @@ document.addEventListener("click", (evento) => {
  * @param {string} id
  */
 async function excluirPonto(id) {
-    const confirmar = confirm(
-        "Deseja realmente excluir este ponto?"
-    );
+  const confirmar = confirm("Deseja realmente excluir este ponto?");
 
-    if (!confirmar) {
-        return;
+  if (!confirmar) {
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`/api/pontos/${id}`, {
+      method: "DELETE",
+    });
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(resultado.erro || "Erro ao excluir ponto.");
     }
 
-    try {
-        const resposta = await fetch(
-            `/api/pontos/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
+    if (pontoEmEdicaoId === id) {
+      formulario.reset();
 
-        const resultado = await resposta.json();
+      campoLatitude.value = "";
+      campoLongitude.value = "";
 
-        if (!resposta.ok) {
-            throw new Error(
-                resultado.erro ||
-                "Erro ao excluir ponto."
-            );
-        }
+      pontoEmEdicaoId = null;
 
-        if (pontoEmEdicaoId === id) {
-            formulario.reset();
+      if (marcadorSelecao) {
+        mapa.removeLayer(marcadorSelecao);
+        marcadorSelecao = null;
+      }
 
-            campoLatitude.value = "";
-            campoLongitude.value = "";
+      botaoCadastrar.textContent = "Cadastrar ponto";
 
-            pontoEmEdicaoId = null;
-
-            if (marcadorSelecao) {
-                mapa.removeLayer(marcadorSelecao);
-                marcadorSelecao = null;
-            }
-
-            botaoCadastrar.textContent =
-                "Cadastrar ponto";
-
-            atualizarEstadoBotao();
-        }
-
-        await carregarPontos();
-
-        alert("Ponto excluído com sucesso!");
-    } catch (erro) {
-        console.error(erro);
-
-        alert(erro.message);
+      atualizarEstadoBotao();
     }
+
+    await carregarPontos();
+
+    alert("Ponto excluído com sucesso!");
+  } catch (erro) {
+    console.error(erro);
+
+    alert(erro.message);
+  }
 }
 /**
  * Envia o formulário para a API.
  */
 formulario.addEventListener("submit", cadastrarPonto);
+
+formularioAvaliacao.addEventListener(
+  "submit",
+  cadastrarAvaliacao,
+);
+
+fecharModalAvaliacoes.addEventListener(
+  "click",
+  fecharModalDeAvaliacoes,
+);
+
+modalAvaliacoes.addEventListener(
+  "click",
+  (evento) => {
+    if (evento.target === modalAvaliacoes) {
+      fecharModalDeAvaliacoes();
+    }
+  },
+);
+
+document.addEventListener("keydown", (evento) => {
+  if (
+    evento.key === "Escape" &&
+    !modalAvaliacoes.classList.contains(
+      "modal-avaliacoes--oculto",
+    )
+  ) {
+    fecharModalDeAvaliacoes();
+  }
+});
 
 /**
  * Carrega os pontos quando a página estiver pronta.
