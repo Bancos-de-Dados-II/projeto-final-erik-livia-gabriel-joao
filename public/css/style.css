@@ -294,3 +294,47 @@ select {
     background: #fee2e2;
     color: #b91c1c;
 }
+
+.usuario-logado {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#nome-usuario {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+}
+
+#botao-sair {
+    padding: 9px 16px;
+
+    border: none;
+    border-radius: 8px;
+
+    background-color: #dc2626;
+    color: #ffffff;
+
+    font-weight: 700;
+    cursor: pointer;
+
+    transition: background-color 0.2s;
+}
+
+#botao-sair:hover {
+    background-color: #b91c1c;
+}
+
+@media (max-width: 600px) {
+    .cabecalho {
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .usuario-logado {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+    }
+}

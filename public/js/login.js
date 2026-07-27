@@ -1,5 +1,12 @@
 "use strict";
 
+const usuarioSalvo =
+    localStorage.getItem("usuario");
+
+if (usuarioSalvo) {
+    window.location.href = "/";
+}
+
 const formularioLogin =
     document.querySelector("#form-login");
 

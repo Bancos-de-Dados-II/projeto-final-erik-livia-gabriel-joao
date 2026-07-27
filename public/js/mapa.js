@@ -1,5 +1,34 @@
 "use strict";
 
+const usuarioSalvo = localStorage.getItem("usuario");
+
+if (!usuarioSalvo) {
+  window.location.href = "./login.html";
+}
+
+let usuarioLogado = null;
+
+try {
+  usuarioLogado = JSON.parse(usuarioSalvo);
+} catch (erro) {
+  localStorage.removeItem("usuario");
+  window.location.href = "./login.html";
+}
+
+const nomeUsuario = document.querySelector("#nome-usuario");
+const botaoSair = document.querySelector("#botao-sair");
+
+if (nomeUsuario && usuarioLogado) {
+  nomeUsuario.textContent = `Olá, ${usuarioLogado.nome}`;
+}
+
+if (botaoSair) {
+  botaoSair.addEventListener("click", () => {
+    localStorage.removeItem("usuario");
+    window.location.href = "./login.html";
+  });
+}
+
 /**
  * Pontos recebidos da API.
  */
