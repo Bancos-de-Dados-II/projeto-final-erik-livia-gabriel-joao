@@ -10,14 +10,10 @@ body {
         Arial,
         Helvetica,
         sans-serif;
-
     background:
-        linear-gradient(
-            135deg,
+        linear-gradient(135deg,
             #e8f5e9,
-            #c8e6c9
-        );
-
+            #c8e6c9);
     color: #1f2937;
 }
 
@@ -28,27 +24,20 @@ input {
 
 .pagina-login {
     min-height: 100vh;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     padding: 24px;
 }
 
 .cartao-login {
     width: 100%;
     max-width: 420px;
-
     padding: 36px;
-
     background-color: #ffffff;
-
     border-radius: 16px;
-
     box-shadow:
-        0 16px 40px
-        rgba(0, 0, 0, 0.12);
+        0 16px 40px rgba(0, 0, 0, 0.12);
 }
 
 .cabecalho-login {
@@ -90,12 +79,9 @@ input {
 .campo input {
     width: 100%;
     padding: 12px 14px;
-
     border: 1px solid #d1d5db;
     border-radius: 8px;
-
     outline: none;
-
     transition:
         border-color 0.2s,
         box-shadow 0.2s;
@@ -103,25 +89,19 @@ input {
 
 .campo input:focus {
     border-color: #16a34a;
-
     box-shadow:
-        0 0 0 3px
-        rgba(22, 163, 74, 0.15);
+        0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 #botao-entrar {
     width: 100%;
     padding: 13px;
-
     border: none;
     border-radius: 8px;
-
     background-color: #16a34a;
     color: #ffffff;
-
     font-weight: 700;
     cursor: pointer;
-
     transition:
         background-color 0.2s,
         opacity 0.2s;
@@ -136,27 +116,45 @@ input {
     opacity: 0.65;
 }
 
+#botao-cadastrar {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    background-color: #16a34a;
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background-color 0.2s,
+        opacity 0.2s;
+}
+
+#botao-cadastrar:hover {
+    background-color: #15803d;
+}
+
+#botao-cadastrar:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
 .mensagem-login {
     display: none;
-
     padding: 10px;
-
     border-radius: 6px;
-
     font-size: 14px;
     text-align: center;
 }
 
 .mensagem-login--erro {
     display: block;
-
     background-color: #fee2e2;
     color: #b91c1c;
 }
 
 .mensagem-login--sucesso {
     display: block;
-
     background-color: #dcfce7;
     color: #166534;
 }
